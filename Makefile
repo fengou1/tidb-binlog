@@ -58,6 +58,9 @@ reparo:
 binlogctl:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/binlogctl cmd/binlogctl/main.go
 
+ddldumper:
+	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/ddldumper cmd/ddldumper/main.go
+
 install:
 	go install ./...
 

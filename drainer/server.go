@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
+	"github.com/pingcap/parser/model"
 	"github.com/pingcap/tidb-binlog/drainer/checkpoint"
 	"github.com/pingcap/tidb-binlog/pkg/flags"
 	"github.com/pingcap/tidb-binlog/pkg/node"
@@ -189,7 +190,8 @@ func NewServer(cfg *Config) (*Server, error) {
 	}, nil
 }
 
-func createSyncer(etcdURLs string, cp checkpoint.CheckPoint, cfg *SyncerConfig) (syncer *Syncer, err error) {
+// GetHistoryJobs get all ddl jobs from pd
+func GetHistoryJobs(etcdURLs string) ([]*model.Job, error) {
 	tiStore, err := createTiStore(etcdURLs)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -197,6 +199,14 @@ func createSyncer(etcdURLs string, cp checkpoint.CheckPoint, cfg *SyncerConfig) 
 	defer tiStore.Close()
 
 	jobs, err := loadHistoryDDLJobs(tiStore)
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+	return jobs, err
+}
+
+func createSyncer(etcdURLs string, cp checkpoint.CheckPoint, cfg *SyncerConfig) (syncer *Syncer, err error) {
+	jobs, err := GetHistoryJobs(etcdURLs)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
