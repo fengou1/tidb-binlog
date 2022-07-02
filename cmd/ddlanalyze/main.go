@@ -20,7 +20,7 @@ func main() {
 	inputFile := ""
 	outputFile := ""
 	pflag.StringVar(&inputFile, flagInputFile, "./ddlJobs", "input file")
-	pflag.StringVar(&inputFile, flagOutputFile, "./ddlSpecificJobs", "output file")
+	pflag.StringVar(&outputFile, flagOutputFile, "./ddlSpecificJobs", "output file")
 	pflag.Parse()
 
 	inFile, err := os.Open(inputFile)
