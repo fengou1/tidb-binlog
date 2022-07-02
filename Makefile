@@ -61,6 +61,9 @@ binlogctl:
 ddldumper:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/ddldumper cmd/ddldumper/main.go
 
+ddlanalyze:
+	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/ddlanalyze cmd/ddlanalyze/main.go
+
 install:
 	go install ./...
 
