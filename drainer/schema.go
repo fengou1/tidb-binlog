@@ -128,7 +128,8 @@ func (s *Schema) TableByID(id int64) (val *model.TableInfo, ok bool) {
 func (s *Schema) DropSchema(id int64) (string, error) {
 	schema, ok := s.schemas[id]
 	if !ok {
-		return "", errors.NotFoundf("schema %d", id)
+		log.Warn("cannot find schema", zap.Error(errors.NotFoundf("schema %d", id)))
+		return "",  nil
 	}
 
 	for _, table := range schema.Tables {
@@ -197,7 +198,8 @@ func (s *Schema) CreateTable(schema *model.DBInfo, table *model.TableInfo) error
 func (s *Schema) ReplaceTable(table *model.TableInfo) error {
 	_, ok := s.tables[table.ID]
 	if !ok {
-		return errors.NotFoundf("table %s(%d)", table.Name, table.ID)
+		log.Warn("cannot ReplaceTable", zap.Error(errors.NotFoundf("table %s(%d)", table.Name, table.ID)))
+		return  nil
 	}
 
 	if s.hasImplicitCol && !table.PKIsHandle {
@@ -254,6 +256,7 @@ func (s *Schema) HandlePreviousDDLJobIfNeed(version int64) error {
 		}
 		_, _, _, err := s.handleDDL(job)
 		if err != nil {
+			log.Warn("cannot handleDDL", zap.Error(errors.Annotatef(err, "handle ddl job %v failed, the schema info: %s", s.jobs[i], s)))
 			return errors.Annotatef(err, "handle ddl job %v failed, the schema info: %s", s.jobs[i], s)
 		}
 	}
@@ -320,7 +323,8 @@ func (s *Schema) handleDDL(job *model.Job) (schemaName string, tableName string,
 		// ignore schema doesn't support reanme ddl
 		_, ok := s.SchemaByTableID(job.TableID)
 		if !ok {
-			return "", "", "", errors.NotFoundf("table(%d) or it's schema", job.TableID)
+			log.Warn("cannot find schema", zap.Error(errors.NotFoundf("table(%d) or it's schema", job.TableID)), zap.Int64("Job ID", job.ID))
+			return "", "", "", nil
 		}
 		// first drop the table
 		_, err := s.DropTable(job.TableID)
@@ -331,7 +335,8 @@ func (s *Schema) handleDDL(job *model.Job) (schemaName string, tableName string,
 		table := job.BinlogInfo.TableInfo
 		schema, ok := s.SchemaByID(job.SchemaID)
 		if !ok {
-			return "", "", "", errors.NotFoundf("schema %d", job.SchemaID)
+			log.Warn("cannot find schema", zap.Error(errors.NotFoundf("schema %d", job.SchemaID)), zap.Int64("Job ID", job.ID))
+			return "", "", "",  nil
 		}
 
 		err = s.CreateTable(schema, table)
@@ -352,7 +357,8 @@ func (s *Schema) handleDDL(job *model.Job) (schemaName string, tableName string,
 
 		schema, ok := s.SchemaByID(job.SchemaID)
 		if !ok {
-			return "", "", "", errors.NotFoundf("schema %d", job.SchemaID)
+			log.Warn("cannot find schema", zap.Error(errors.NotFoundf("schema %d", job.SchemaID)))
+			return "", "", "",  nil
 		}
 
 		err := s.CreateTable(schema, table)
@@ -385,13 +391,14 @@ func (s *Schema) handleDDL(job *model.Job) (schemaName string, tableName string,
 	case model.ActionTruncateTable:
 		schema, ok := s.SchemaByID(job.SchemaID)
 		if !ok {
-			return "", "", "", errors.NotFoundf("schema %d", job.SchemaID)
+			log.Warn("cannot find schema", zap.Error(errors.NotFoundf("schema %d", job.SchemaID)))
+			return "", "", "",  nil
 		}
 
 		// job.TableID is the old table id, different from table.ID
 		_, err := s.DropTable(job.TableID)
 		if err != nil {
-			log.Debug("cannot drop table in truncate", zap.Error(err))
+			log.Warn("cannot drop table in truncate", zap.Error(err), zap.Int64("Job ID", job.ID))
 			err = nil
 		}
 
@@ -423,7 +430,8 @@ func (s *Schema) handleDDL(job *model.Job) (schemaName string, tableName string,
 
 		schema, ok := s.SchemaByID(job.SchemaID)
 		if !ok {
-			return "", "", "", errors.NotFoundf("schema %d", job.SchemaID)
+			log.Warn("cannot find schema", zap.Error(errors.NotFoundf("schema %d", job.SchemaID)), zap.Int64("Job ID", job.ID))
+			return "", "", "",  nil
 		}
 
 		err := s.ReplaceTable(tbInfo)
