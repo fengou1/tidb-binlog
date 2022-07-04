@@ -61,7 +61,7 @@ func (t *schemaSuite) TestSchema(c *C) {
 	// reconstruct the local schema
 	schema, err := NewSchema(jobs, false)
 	c.Assert(err, IsNil)
-	err = schema.handlePreviousDDLJobIfNeed(2)
+	err = schema.HandlePreviousDDLJobIfNeed(2)
 	c.Assert(err, IsNil)
 
 	// test drop schema
@@ -78,7 +78,7 @@ func (t *schemaSuite) TestSchema(c *C) {
 	)
 	schema, err = NewSchema(jobs, false)
 	c.Assert(err, IsNil)
-	err = schema.handlePreviousDDLJobIfNeed(3)
+	err = schema.HandlePreviousDDLJobIfNeed(3)
 	c.Assert(err, IsNil)
 
 	// test create schema already exist error
@@ -87,7 +87,7 @@ func (t *schemaSuite) TestSchema(c *C) {
 	jobs = append(jobs, jobDup)
 	schema, err = NewSchema(jobs, false)
 	c.Assert(err, IsNil)
-	err = schema.handlePreviousDDLJobIfNeed(2)
+	err = schema.HandlePreviousDDLJobIfNeed(2)
 	c.Log(err)
 	c.Assert(errors.IsAlreadyExists(err), IsTrue)
 
@@ -106,7 +106,7 @@ func (t *schemaSuite) TestSchema(c *C) {
 	)
 	schema, err = NewSchema(jobs, false)
 	c.Assert(err, IsNil)
-	err = schema.handlePreviousDDLJobIfNeed(1)
+	err = schema.HandlePreviousDDLJobIfNeed(1)
 	c.Assert(errors.IsNotFound(err), IsTrue)
 }
 
@@ -204,7 +204,7 @@ func (*schemaSuite) TestTable(c *C) {
 	// reconstruct the local schema
 	schema, err := NewSchema(jobs, false)
 	c.Assert(err, IsNil)
-	err = schema.handlePreviousDDLJobIfNeed(4)
+	err = schema.HandlePreviousDDLJobIfNeed(4)
 	c.Assert(err, IsNil)
 
 	// check the historical db that constructed above whether in the schema list of local schema
@@ -235,7 +235,7 @@ func (*schemaSuite) TestTable(c *C) {
 	)
 	schema1, err := NewSchema(jobs, false)
 	c.Assert(err, IsNil)
-	err = schema1.handlePreviousDDLJobIfNeed(5)
+	err = schema1.HandlePreviousDDLJobIfNeed(5)
 	c.Assert(err, IsNil)
 	_, ok = schema1.TableByID(tblInfo1.ID)
 	c.Assert(ok, IsTrue)
@@ -257,7 +257,7 @@ func (*schemaSuite) TestTable(c *C) {
 	)
 	schema2, err := NewSchema(jobs, false)
 	c.Assert(err, IsNil)
-	err = schema2.handlePreviousDDLJobIfNeed(6)
+	err = schema2.HandlePreviousDDLJobIfNeed(6)
 	c.Assert(err, IsNil)
 
 	_, ok = schema2.TableByID(tblInfo.ID)

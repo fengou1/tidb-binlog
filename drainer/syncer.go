@@ -349,7 +349,7 @@ ForLoop:
 				log.Debug("encounter older schema dml")
 			}
 
-			err = s.schema.handlePreviousDDLJobIfNeed(preWrite.SchemaVersion)
+			err = s.schema.HandlePreviousDDLJobIfNeed(preWrite.SchemaVersion)
 			if err != nil {
 				err = errors.Annotate(err, "handlePreviousDDLJobIfNeed failed")
 				break ForLoop
@@ -387,12 +387,12 @@ ForLoop:
 
 			// Notice: the version of DDL Binlog we receive are Monotonically increasing
 			// DDL (with version 10, commit ts 100) -> DDL (with version 9, commit ts 101) would never happen
-			s.schema.addJob(b.job)
+			s.schema.AddJob(b.job)
 
 			log.Debug("get DDL", zap.Int64("SchemaVersion", b.job.BinlogInfo.SchemaVersion))
 			lastDDLSchemaVersion = b.job.BinlogInfo.SchemaVersion
 
-			err = s.schema.handlePreviousDDLJobIfNeed(b.job.BinlogInfo.SchemaVersion)
+			err = s.schema.HandlePreviousDDLJobIfNeed(b.job.BinlogInfo.SchemaVersion)
 			if err != nil {
 				err = errors.Trace(err)
 				break ForLoop

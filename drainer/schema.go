@@ -159,7 +159,8 @@ func (s *Schema) CreateSchema(db *model.DBInfo) error {
 func (s *Schema) DropTable(id int64) (string, error) {
 	table, ok := s.tables[id]
 	if !ok {
-		return "", errors.NotFoundf("table %d", id)
+		log.Debug("cannot drop table in truncate", zap.Error(errors.NotFoundf("table %d", id)))
+		return "", nil
 	}
 	err := s.removeTable(id)
 	if err != nil {
@@ -224,13 +225,13 @@ func (s *Schema) removeTable(tableID int64) error {
 	return nil
 }
 
-func (s *Schema) addJob(job *model.Job) {
+func (s *Schema) AddJob(job *model.Job) {
 	if len(s.jobs) == 0 || s.jobs[len(s.jobs)-1].BinlogInfo.SchemaVersion < job.BinlogInfo.SchemaVersion {
 		s.jobs = append(s.jobs, job)
 	}
 }
 
-func (s *Schema) handlePreviousDDLJobIfNeed(version int64) error {
+func (s *Schema) HandlePreviousDDLJobIfNeed(version int64) error {
 	var i int
 	for i = 0; i < len(s.jobs); i++ {
 		job := s.jobs[i]
@@ -375,9 +376,11 @@ func (s *Schema) handleDDL(job *model.Job) (schemaName string, tableName string,
 			return "", "", "", errors.Trace(err)
 		}
 
-		s.version2SchemaTable[job.BinlogInfo.SchemaVersion] = TableName{Schema: schema.Name.O, Table: tableName}
-		s.currentVersion = job.BinlogInfo.SchemaVersion
-		schemaName = schema.Name.O
+		if tableName != "" {
+			s.version2SchemaTable[job.BinlogInfo.SchemaVersion] = TableName{Schema: schema.Name.O, Table: tableName}
+			s.currentVersion = job.BinlogInfo.SchemaVersion
+			schemaName = schema.Name.O
+		}
 
 	case model.ActionTruncateTable:
 		schema, ok := s.SchemaByID(job.SchemaID)
@@ -388,7 +391,8 @@ func (s *Schema) handleDDL(job *model.Job) (schemaName string, tableName string,
 		// job.TableID is the old table id, different from table.ID
 		_, err := s.DropTable(job.TableID)
 		if err != nil {
-			return "", "", "", errors.Trace(err)
+			log.Debug("cannot drop table in truncate", zap.Error(err))
+			err = nil
 		}
 
 		table := job.BinlogInfo.TableInfo
